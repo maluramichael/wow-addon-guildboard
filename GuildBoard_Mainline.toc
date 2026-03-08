@@ -1,0 +1,16 @@
+## Interface: 120001
+## Title: |cFF00D1FFMM|r GuildBoard
+## Notes: Visual guild roster dashboard with grouping, search, and alt detection
+## Author: Michael Malura
+## Version: 1.0.0
+## IconTexture: Interface\Icons\INV_Misc_GroupNeedMore
+## Category-enUS: Social
+## Category-deDE: Soziales
+## SavedVariables: GuildBoardDB
+## OptionalDeps: Ace3, LibDataBroker-1.1, LibDBIcon-1.0
+
+embeds.xml
+
+Core.lua
+UI.lua
+Config.lua
