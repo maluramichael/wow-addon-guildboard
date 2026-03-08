@@ -64,6 +64,8 @@ local defaults = {
         minLevel = 1,
         raidLevel = MAX_LEVEL,
         altPatterns = { "^alt" },
+        ilvlPatterns = { "(%d+)%s*ilvl", "ilvl%s*(%d+)", "(%d+)%s*-%s*ilvl" },
+        minIlvl = 0,
         windowWidth = 580,
         windowHeight = 520,
         collapsed = {},
@@ -119,7 +121,9 @@ function GuildBoard:ScanRoster()
                 status = status or 0,
                 role = ROLE_MAP[cf] or "DPS",
                 isMaxLevel = (level or 0) >= self.db.profile.raidLevel,
+                ilvl = nil,
             }
+            member.ilvl = self:ParseIlvl(member.note) or self:ParseIlvl(member.officerNote)
             tinsert(members, member)
             if isOnline then
                 onlineCount = onlineCount + 1
@@ -147,6 +151,7 @@ function GuildBoard:GetFilteredMembers(search)
     local showOffline = self.db.profile.showOffline
     local hideAlts = self.db.profile.hideAlts
     local minLevel = self.db.profile.minLevel or 1
+    local minIlvl = self.db.profile.minIlvl or 0
     local result = {}
 
     for _, m in ipairs(self.members) do
@@ -160,6 +165,13 @@ function GuildBoard:GetFilteredMembers(search)
         -- Level filter
         if visible and m.level < minLevel then
             visible = false
+        end
+
+        -- iLvl filter
+        if visible and minIlvl > 0 then
+            if not m.ilvl or m.ilvl < minIlvl then
+                visible = false
+            end
         end
 
         -- Alt filter
@@ -403,6 +415,26 @@ function GuildBoard:IsAlt(member)
     return false
 end
 
+-------------------------------------------------------------------------------
+-- iLvl Extraction
+-------------------------------------------------------------------------------
+function GuildBoard:ParseIlvl(note)
+    if not note or note == "" then return nil end
+    local patterns = self.db and self.db.profile.ilvlPatterns or {}
+    local lower = strlower(note)
+
+    for _, pattern in ipairs(patterns) do
+        local ok, num = pcall(string.match, lower, strlower(pattern))
+        if ok and num then
+            local ilvl = tonumber(num)
+            if ilvl and ilvl > 0 and ilvl < 1000 then
+                return ilvl
+            end
+        end
+    end
+    return nil
+end
+
 function GuildBoard:GetAltMainName(member)
     local text = strlower(member.note or member.officerNote or "")
     -- "ALT Charname" or "ALT Charname's"
@@ -433,8 +465,13 @@ end
 -------------------------------------------------------------------------------
 function GuildBoard:GetRaidReadyCount()
     local count = 0
+    local hideAlts = self.db.profile.hideAlts
     for _, m in ipairs(self.members) do
-        if m.isMaxLevel then count = count + 1 end
+        if m.isMaxLevel then
+            if not hideAlts or not self:IsAlt(m) then
+                count = count + 1
+            end
+        end
     end
     return count
 end

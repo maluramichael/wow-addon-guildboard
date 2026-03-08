@@ -47,10 +47,11 @@ local C = {
 local COL = {
     ICON  = 6,
     NAME  = 28,
-    LEVEL = 190,
-    RANK  = 225,
-    ZONE  = 310,
-    NOTE  = 410,
+    LEVEL = 170,
+    ILVL  = 205,
+    RANK  = 245,
+    ZONE  = 320,
+    NOTE  = 415,
 }
 
 -- Status dot colors
@@ -95,7 +96,7 @@ local function AcquireRow(parent)
         -- Name
         row.nameText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         row.nameText:SetPoint("LEFT", COL.NAME, 0)
-        row.nameText:SetWidth(155)
+        row.nameText:SetWidth(135)
         row.nameText:SetJustifyH("LEFT")
         row.nameText:SetWordWrap(false)
 
@@ -105,17 +106,23 @@ local function AcquireRow(parent)
         row.levelText:SetWidth(30)
         row.levelText:SetJustifyH("RIGHT")
 
+        -- iLvl
+        row.ilvlText = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        row.ilvlText:SetPoint("LEFT", COL.ILVL, 0)
+        row.ilvlText:SetWidth(35)
+        row.ilvlText:SetJustifyH("RIGHT")
+
         -- Rank
         row.rankText = row:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
         row.rankText:SetPoint("LEFT", COL.RANK, 0)
-        row.rankText:SetWidth(80)
+        row.rankText:SetWidth(70)
         row.rankText:SetJustifyH("LEFT")
         row.rankText:SetWordWrap(false)
 
         -- Zone
         row.zoneText = row:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
         row.zoneText:SetPoint("LEFT", COL.ZONE, 0)
-        row.zoneText:SetWidth(95)
+        row.zoneText:SetWidth(90)
         row.zoneText:SetJustifyH("LEFT")
         row.zoneText:SetWordWrap(false)
 
@@ -442,6 +449,40 @@ local function CreateMainFrame()
     end)
     f.lvlInput = lvlInput
 
+    -- Min iLvl label + input
+    local ilvlLabel = toolbar:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    ilvlLabel:SetPoint("LEFT", lvlInput, "RIGHT", 16, 0)
+    ilvlLabel:SetText("Min iLvl:")
+
+    local ilvlInput = CreateFrame("EditBox", nil, toolbar, "BackdropTemplate")
+    ilvlInput:SetPoint("LEFT", ilvlLabel, "RIGHT", 4, 0)
+    ilvlInput:SetSize(40, 18)
+    ilvlInput:SetBackdrop(BACKDROP_INNER)
+    ilvlInput:SetBackdropColor(0.08, 0.08, 0.10, 1)
+    ilvlInput:SetBackdropBorderColor(unpack(C.innerBorder))
+    ilvlInput:SetFontObject(GameFontHighlightSmall)
+    ilvlInput:SetAutoFocus(false)
+    ilvlInput:SetNumeric(true)
+    ilvlInput:SetMaxLetters(4)
+    ilvlInput:SetTextInsets(4, 4, 0, 0)
+    ilvlInput:SetText("0")
+    ilvlInput:SetScript("OnTextChanged", function(self)
+        local val = tonumber(self:GetText())
+        if val then
+            GuildBoard.db.profile.minIlvl = max(0, val)
+            GuildBoard:RefreshList()
+        elseif self:GetText() == "" then
+            GuildBoard.db.profile.minIlvl = 0
+            GuildBoard:RefreshList()
+        end
+    end)
+    ilvlInput:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
+    ilvlInput:SetScript("OnEscapePressed", function(self)
+        self:SetText(tostring(GuildBoard.db.profile.minIlvl))
+        self:ClearFocus()
+    end)
+    f.ilvlInput = ilvlInput
+
     ---------------------------------------------------------------------------
     -- Column Headers
     ---------------------------------------------------------------------------
@@ -464,10 +505,11 @@ local function CreateMainFrame()
         return label
     end
 
-    AddColLabel("Name", COL.NAME, 155, "LEFT")
+    AddColLabel("Name", COL.NAME, 135, "LEFT")
     AddColLabel("Lvl", COL.LEVEL, 30, "RIGHT")
-    AddColLabel("Rank", COL.RANK, 80, "LEFT")
-    AddColLabel("Zone", COL.ZONE, 95, "LEFT")
+    AddColLabel("iLvl", COL.ILVL, 35, "RIGHT")
+    AddColLabel("Rank", COL.RANK, 70, "LEFT")
+    AddColLabel("Zone", COL.ZONE, 90, "LEFT")
     AddColLabel("Note", COL.NOTE, nil, "LEFT")
 
     ---------------------------------------------------------------------------
@@ -569,6 +611,7 @@ local function CreateMainFrame()
         offlineCB:SetChecked(GuildBoard.db.profile.showOffline)
         altsCB:SetChecked(GuildBoard.db.profile.hideAlts)
         lvlInput:SetText(tostring(GuildBoard.db.profile.minLevel))
+        ilvlInput:SetText(tostring(GuildBoard.db.profile.minIlvl or 0))
         modeBtn:SetText(GuildBoard:GetCurrentModeLabel())
         GuildBoard:RequestRoster()
     end)
@@ -802,6 +845,14 @@ function GuildBoard:RefreshList()
                     row.levelText:SetTextColor(1, 0.82, 0)
                 else
                     row.levelText:SetTextColor(0.7, 0.7, 0.7)
+                end
+
+                -- iLvl
+                if member.ilvl then
+                    row.ilvlText:SetText(tostring(member.ilvl))
+                    row.ilvlText:SetTextColor(0.60, 0.80, 1.00)
+                else
+                    row.ilvlText:SetText("")
                 end
 
                 -- Rank

@@ -119,11 +119,45 @@ function GuildBoard:GetOptionsTable()
                     },
                 },
             },
+            ilvlExtraction = {
+                name = "Item Level Extraction",
+                type = "group",
+                inline = true,
+                order = 3,
+                args = {
+                    desc = {
+                        name = "Lua patterns to extract item level from guild notes. Must contain a (%d+) capture group.\nChecked case-insensitively. First match wins.\n\nExamples:\n  (%d+)%s*ilvl  =  \"230 ilvl\"\n  (%d+)%s*-%s*ilvl  =  \"251 - ilvl\"\n  ilvl%s*(%d+)  =  \"ilvl 230\"",
+                        type = "description",
+                        order = 1,
+                    },
+                    patterns = {
+                        name = "iLvl Patterns (one per line)",
+                        type = "input",
+                        order = 2,
+                        width = "full",
+                        multiline = 4,
+                        get = function()
+                            return table.concat(gb.db.profile.ilvlPatterns, "\n")
+                        end,
+                        set = function(_, val)
+                            local patterns = {}
+                            for line in val:gmatch("[^\r\n]+") do
+                                line = strtrim(line)
+                                if line ~= "" then
+                                    tinsert(patterns, line)
+                                end
+                            end
+                            gb.db.profile.ilvlPatterns = patterns
+                            gb:SendMessage("GUILDBOARD_ROSTER_UPDATED")
+                        end,
+                    },
+                },
+            },
             minimap = {
                 name = "Minimap",
                 type = "group",
                 inline = true,
-                order = 3,
+                order = 4,
                 args = {
                     minimapBtn = {
                         name = "Show Minimap Button",
@@ -147,7 +181,7 @@ function GuildBoard:GetOptionsTable()
                 name = "Slash Commands",
                 type = "group",
                 inline = true,
-                order = 4,
+                order = 5,
                 args = {
                     help = {
                         name = "/gb - Toggle guild board window\n/gb config - Open this options panel\n/gb refresh - Refresh guild roster",
