@@ -20,6 +20,9 @@ read_globals = {
     "tinsert", "tremove", "wipe", "sort",
     "max", "min", "floor", "ceil", "sqrt",
 
+    -- Lua extra
+    "pcall", "string", "table", "tonumber", "tostring",
+
     -- WoW Core
     "CreateFrame", "UIParent", "GameTooltip", "GameFontNormal",
     "GameFontNormalSmall", "GameFontHighlightSmall", "GameFontDisableSmall",

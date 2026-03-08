@@ -9,7 +9,7 @@ local WINDOW_HEIGHT = 520
 local ROW_HEIGHT = 26
 local GROUP_HEIGHT = 26
 local HEADER_HEIGHT = 32
-local TOOLBAR_HEIGHT = 30
+local TOOLBAR_HEIGHT = 58
 local COLHEADER_HEIGHT = 20
 local STATUSBAR_HEIGHT = 20
 local SCROLLBAR_WIDTH = 16
@@ -201,6 +201,54 @@ local function GetStatusText(member)
 end
 
 -------------------------------------------------------------------------------
+-- Custom Controls
+-------------------------------------------------------------------------------
+local modeMenuFrame
+
+local function CreateCheckbox(parent, label)
+    local frame = CreateFrame("Frame", nil, parent)
+    frame:SetSize(130, 18)
+
+    local box = CreateFrame("Button", nil, frame, "BackdropTemplate")
+    box:SetSize(14, 14)
+    box:SetPoint("LEFT", 0, 0)
+    box:SetBackdrop(BACKDROP_INNER)
+    box:SetBackdropColor(0.08, 0.08, 0.10, 1)
+    box:SetBackdropBorderColor(unpack(C.innerBorder))
+
+    local check = box:CreateTexture(nil, "OVERLAY")
+    check:SetPoint("TOPLEFT", 2, -2)
+    check:SetPoint("BOTTOMRIGHT", -2, 2)
+    check:SetColorTexture(unpack(C.accent))
+    box.check = check
+
+    local text = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    text:SetPoint("LEFT", box, "RIGHT", 4, 0)
+    text:SetText(label)
+
+    frame.checked = false
+    check:Hide()
+
+    box:SetScript("OnClick", function()
+        frame.checked = not frame.checked
+        check:SetShown(frame.checked)
+        if frame.onChange then frame.onChange(frame.checked) end
+    end)
+    box:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
+
+    function frame:SetChecked(val)
+        self.checked = val
+        check:SetShown(val)
+    end
+
+    function frame:GetChecked()
+        return self.checked
+    end
+
+    return frame
+end
+
+-------------------------------------------------------------------------------
 -- Main Frame
 -------------------------------------------------------------------------------
 local mainFrame
@@ -260,10 +308,12 @@ local function CreateMainFrame()
     toolbar:SetPoint("TOPRIGHT", header, "BOTTOMRIGHT", 0, -2)
     toolbar:SetHeight(TOOLBAR_HEIGHT)
 
+    ---- Row 1: Search + Group Mode Dropdown + Refresh ----
+
     -- Search box
     local search = CreateFrame("EditBox", nil, toolbar, "BackdropTemplate")
-    search:SetPoint("LEFT", 6, 0)
-    search:SetSize(160, 22)
+    search:SetPoint("TOPLEFT", 6, -4)
+    search:SetSize(200, 22)
     search:SetBackdrop(BACKDROP_INNER)
     search:SetBackdropColor(0.08, 0.08, 0.10, 1)
     search:SetBackdropBorderColor(unpack(C.innerBorder))
@@ -285,58 +335,43 @@ local function CreateMainFrame()
     end)
     f.searchBox = search
 
-    -- Group mode button
+    -- Group mode dropdown button
     local modeBtn = CreateFrame("Button", nil, toolbar, "UIPanelButtonTemplate")
     modeBtn:SetPoint("LEFT", search, "RIGHT", 4, 0)
-    modeBtn:SetSize(90, 22)
+    modeBtn:SetSize(110, 22)
     modeBtn:SetText(GuildBoard:GetCurrentModeLabel())
-    modeBtn:RegisterForClicks("LeftButtonUp", "RightButtonUp")
-    modeBtn:SetScript("OnClick", function(_, button)
-        if button == "RightButton" then
-            GuildBoard:CycleGroupMode(-1)
-        else
-            GuildBoard:CycleGroupMode(1)
+    modeBtn:SetScript("OnClick", function(self)
+        if not modeMenuFrame then
+            modeMenuFrame = CreateFrame("Frame", "GuildBoardModeMenu", UIParent, "UIDropDownMenuTemplate")
         end
-        modeBtn:SetText(GuildBoard:GetCurrentModeLabel())
+        modeMenuFrame.initialize = function(_, level)
+            if level ~= 1 then return end
+            for _, mode in ipairs(GuildBoard:GetGroupModes()) do
+                local info = UIDropDownMenu_CreateInfo()
+                info.text = mode.label
+                info.checked = (GuildBoard.db.profile.groupMode == mode.key)
+                info.func = function()
+                    GuildBoard.db.profile.groupMode = mode.key
+                    modeBtn:SetText(mode.label)
+                    GuildBoard:RefreshList()
+                end
+                UIDropDownMenu_AddButton(info, level)
+            end
+        end
+        ToggleDropDownMenu(1, nil, modeMenuFrame, self, 0, 0)
     end)
     modeBtn:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         GameTooltip:SetText("Group Mode")
-        GameTooltip:AddLine("Left-click to cycle forward", 0.7, 0.7, 0.7)
-        GameTooltip:AddLine("Right-click to cycle backward", 0.7, 0.7, 0.7)
+        GameTooltip:AddLine("Click to select grouping", 0.7, 0.7, 0.7)
         GameTooltip:Show()
     end)
     modeBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
     f.modeBtn = modeBtn
 
-    -- Show Offline toggle
-    local offlineBtn = CreateFrame("Button", nil, toolbar, "UIPanelButtonTemplate")
-    offlineBtn:SetPoint("LEFT", modeBtn, "RIGHT", 4, 0)
-    offlineBtn:SetSize(75, 22)
-    local function UpdateOfflineBtn()
-        if GuildBoard.db.profile.showOffline then
-            offlineBtn:SetText("All")
-        else
-            offlineBtn:SetText("Online")
-        end
-    end
-    offlineBtn:SetScript("OnClick", function()
-        GuildBoard.db.profile.showOffline = not GuildBoard.db.profile.showOffline
-        UpdateOfflineBtn()
-        GuildBoard:RefreshList()
-    end)
-    offlineBtn:SetScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetText("Toggle offline members")
-        GameTooltip:Show()
-    end)
-    offlineBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
-    f.offlineBtn = offlineBtn
-    f.updateOfflineBtn = UpdateOfflineBtn
-
     -- Refresh button
     local refreshBtn = CreateFrame("Button", nil, toolbar, "UIPanelButtonTemplate")
-    refreshBtn:SetPoint("LEFT", offlineBtn, "RIGHT", 4, 0)
+    refreshBtn:SetPoint("TOPRIGHT", -6, -4)
     refreshBtn:SetSize(60, 22)
     refreshBtn:SetText("Refresh")
     refreshBtn:SetScript("OnClick", function()
@@ -348,6 +383,58 @@ local function CreateMainFrame()
         GameTooltip:Show()
     end)
     refreshBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+    ---- Row 2: Show Offline + Hide Alts + Min Level ----
+
+    -- Show Offline checkbox
+    local offlineCB = CreateCheckbox(toolbar, "Show Offline")
+    offlineCB:SetPoint("TOPLEFT", 8, -30)
+    offlineCB.onChange = function(val)
+        GuildBoard.db.profile.showOffline = val
+        GuildBoard:RefreshList()
+    end
+    f.offlineCB = offlineCB
+
+    -- Hide Alts checkbox
+    local altsCB = CreateCheckbox(toolbar, "Hide Alts")
+    altsCB:SetPoint("LEFT", offlineCB, "RIGHT", 16, 0)
+    altsCB.onChange = function(val)
+        GuildBoard.db.profile.hideAlts = val
+        GuildBoard:RefreshList()
+    end
+    f.altsCB = altsCB
+
+    -- Min Level label + input
+    local lvlLabel = toolbar:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    lvlLabel:SetPoint("LEFT", altsCB, "RIGHT", 24, 0)
+    lvlLabel:SetText("Min Level:")
+
+    local lvlInput = CreateFrame("EditBox", nil, toolbar, "BackdropTemplate")
+    lvlInput:SetPoint("LEFT", lvlLabel, "RIGHT", 4, 0)
+    lvlInput:SetSize(36, 18)
+    lvlInput:SetBackdrop(BACKDROP_INNER)
+    lvlInput:SetBackdropColor(0.08, 0.08, 0.10, 1)
+    lvlInput:SetBackdropBorderColor(unpack(C.innerBorder))
+    lvlInput:SetFontObject(GameFontHighlightSmall)
+    lvlInput:SetAutoFocus(false)
+    lvlInput:SetNumeric(true)
+    lvlInput:SetMaxLetters(3)
+    lvlInput:SetTextInsets(4, 4, 0, 0)
+    lvlInput:SetText("1")
+    lvlInput:SetScript("OnTextChanged", function(self, userInput)
+        if not userInput then return end
+        local val = tonumber(self:GetText())
+        if val then
+            GuildBoard.db.profile.minLevel = max(1, min(80, val))
+            GuildBoard:RefreshList()
+        end
+    end)
+    lvlInput:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
+    lvlInput:SetScript("OnEscapePressed", function(self)
+        self:SetText(tostring(GuildBoard.db.profile.minLevel))
+        self:ClearFocus()
+    end)
+    f.lvlInput = lvlInput
 
     ---------------------------------------------------------------------------
     -- Column Headers
@@ -452,7 +539,9 @@ local function CreateMainFrame()
     ---------------------------------------------------------------------------
     f:SetScript("OnShow", function()
         scrollChild:SetWidth(scrollFrame:GetWidth())
-        UpdateOfflineBtn()
+        offlineCB:SetChecked(GuildBoard.db.profile.showOffline)
+        altsCB:SetChecked(GuildBoard.db.profile.hideAlts)
+        lvlInput:SetText(tostring(GuildBoard.db.profile.minLevel))
         modeBtn:SetText(GuildBoard:GetCurrentModeLabel())
         GuildBoard:RequestRoster()
     end)
@@ -608,8 +697,7 @@ function GuildBoard:RefreshList()
     end
 
     local searchText = mainFrame.searchBox:GetText()
-    local showOffline = self.db.profile.showOffline
-    local filtered = self:GetFilteredMembers(searchText, showOffline)
+    local filtered = self:GetFilteredMembers(searchText)
     local groups = self:GetGroupedMembers(filtered)
 
     local scrollChild = mainFrame.scrollChild

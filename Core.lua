@@ -60,7 +60,10 @@ local defaults = {
         minimap = { hide = false },
         groupMode = "class",
         showOffline = false,
+        hideAlts = false,
+        minLevel = 1,
         raidLevel = MAX_LEVEL,
+        altPatterns = { "^alt" },
         collapsed = {},
     },
 }
@@ -137,8 +140,11 @@ end
 -------------------------------------------------------------------------------
 -- Filtering
 -------------------------------------------------------------------------------
-function GuildBoard:GetFilteredMembers(search, showOffline)
+function GuildBoard:GetFilteredMembers(search)
     search = search and strlower(strtrim(search)) or ""
+    local showOffline = self.db.profile.showOffline
+    local hideAlts = self.db.profile.hideAlts
+    local minLevel = self.db.profile.minLevel or 1
     local result = {}
 
     for _, m in ipairs(self.members) do
@@ -146,6 +152,16 @@ function GuildBoard:GetFilteredMembers(search, showOffline)
 
         -- Online filter
         if not showOffline and not m.isOnline then
+            visible = false
+        end
+
+        -- Level filter
+        if visible and m.level < minLevel then
+            visible = false
+        end
+
+        -- Alt filter
+        if visible and hideAlts and self:IsAlt(m) then
             visible = false
         end
 
@@ -369,14 +385,31 @@ end
 -- Alt Detection
 -------------------------------------------------------------------------------
 function GuildBoard:IsAlt(member)
-    local text = member.officerNote or member.note or ""
-    return strlower(text):find("alt") ~= nil
+    local patterns = self.db and self.db.profile.altPatterns or { "^alt" }
+    local note = strlower(member.note or "")
+    local officerNote = strlower(member.officerNote or "")
+
+    for _, pattern in ipairs(patterns) do
+        local p = strlower(pattern)
+        if p ~= "" then
+            local ok1, match1 = pcall(string.find, note, p)
+            if ok1 and match1 then return true end
+            local ok2, match2 = pcall(string.find, officerNote, p)
+            if ok2 and match2 then return true end
+        end
+    end
+    return false
 end
 
 function GuildBoard:GetAltMainName(member)
-    local text = strlower(member.officerNote or member.note or "")
-    local main = text:match("alt of (%w+)")
+    local text = strlower(member.note or member.officerNote or "")
+    -- "ALT Charname" or "ALT Charname's"
+    local main = text:match("^alt%s+(%w+)")
     if main then return main end
+    -- "alt of Charname"
+    main = text:match("alt of (%w+)")
+    if main then return main end
+    -- "Charname's alt"
     main = text:match("(%w+)'s alt")
     return main
 end

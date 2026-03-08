@@ -43,11 +43,37 @@ function GuildBoard:GetOptionsTable()
                             gb:SendMessage("GUILDBOARD_ROSTER_UPDATED")
                         end,
                     },
+                    hideAlts = {
+                        name = "Hide Alts by Default",
+                        desc = "Hide characters detected as alts when opening the window",
+                        type = "toggle",
+                        order = 3,
+                        width = "full",
+                        get = function() return gb.db.profile.hideAlts end,
+                        set = function(_, val)
+                            gb.db.profile.hideAlts = val
+                            gb:SendMessage("GUILDBOARD_ROSTER_UPDATED")
+                        end,
+                    },
+                    minLevel = {
+                        name = "Default Min Level Filter",
+                        desc = "Only show members at or above this level",
+                        type = "range",
+                        order = 4,
+                        min = 1,
+                        max = 80,
+                        step = 1,
+                        get = function() return gb.db.profile.minLevel end,
+                        set = function(_, val)
+                            gb.db.profile.minLevel = val
+                            gb:SendMessage("GUILDBOARD_ROSTER_UPDATED")
+                        end,
+                    },
                     raidLevel = {
                         name = "Raid Ready Level",
                         desc = "Minimum level to be considered raid ready",
                         type = "range",
-                        order = 3,
+                        order = 5,
                         min = 1,
                         max = 80,
                         step = 1,
@@ -59,11 +85,45 @@ function GuildBoard:GetOptionsTable()
                     },
                 },
             },
+            altDetection = {
+                name = "Alt Detection",
+                type = "group",
+                inline = true,
+                order = 2,
+                args = {
+                    desc = {
+                        name = "Lua patterns to identify alts. Checked case-insensitively against both public and officer notes.\n\nExamples:\n  ^alt  =  note starts with \"ALT\"\n  ^twink  =  note starts with \"TWINK\"\n  alt of  =  note contains \"alt of\"",
+                        type = "description",
+                        order = 1,
+                    },
+                    patterns = {
+                        name = "Alt Patterns (one per line)",
+                        type = "input",
+                        order = 2,
+                        width = "full",
+                        multiline = 4,
+                        get = function()
+                            return table.concat(gb.db.profile.altPatterns, "\n")
+                        end,
+                        set = function(_, val)
+                            local patterns = {}
+                            for line in val:gmatch("[^\r\n]+") do
+                                line = strtrim(line)
+                                if line ~= "" then
+                                    tinsert(patterns, line)
+                                end
+                            end
+                            gb.db.profile.altPatterns = patterns
+                            gb:SendMessage("GUILDBOARD_ROSTER_UPDATED")
+                        end,
+                    },
+                },
+            },
             minimap = {
                 name = "Minimap",
                 type = "group",
                 inline = true,
-                order = 2,
+                order = 3,
                 args = {
                     minimapBtn = {
                         name = "Show Minimap Button",
@@ -87,7 +147,7 @@ function GuildBoard:GetOptionsTable()
                 name = "Slash Commands",
                 type = "group",
                 inline = true,
-                order = 3,
+                order = 4,
                 args = {
                     help = {
                         name = "/gb - Toggle guild board window\n/gb config - Open this options panel\n/gb refresh - Refresh guild roster",
