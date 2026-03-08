@@ -4,7 +4,8 @@ At-a-glance guild roster dashboard with grouping, item level parsing, alt detect
 
 ## Features
 
-- **5 Group Modes** — group by Class, Role, Rank, Level Range, or Online Status via dropdown menu
+- **5 Group Modes** — group by Class, Role (note-based), Rank, Level Range, or Online Status via dropdown menu
+- **Note-Based Roles** — Role grouping reads Tank/Healer/DPS from guild notes; `ALL` keyword places a member in every role group; unmatched members go to Unknown
 - **Item Level Column** — extracts iLvl from guild notes using configurable patterns
 - **Alt Detection** — identifies alts by note patterns (e.g. notes starting with "ALT")
 - **Powerful Filters** — Show Offline, Hide Alts, Min Level, Min iLvl — all in the toolbar
@@ -69,6 +70,20 @@ Lua patterns with a `(%d+)` capture group to extract item level from notes. Firs
 | `(%d+)%s*ilvl` | `230 ilvl` |
 | `ilvl%s*(%d+)` | `ilvl 230` |
 | `(%d+)%s*-%s*ilvl` | `251 - ilvl` |
+
+### Role Detection (By Role grouping)
+
+Role is detected from guild notes (public + officer) using keyword matching:
+
+| Keyword | Role |
+|---------|------|
+| `tank` | Tank |
+| `heal` (also `heals`, `healer`) | Healer |
+| `dps` | DPS |
+| `all` | Duplicated into Tank, Healer, and DPS |
+| *(no match)* | Unknown |
+
+Examples: `DPS - 251 - ilvl PVE` → DPS, `PVP - 1425 - HEALS` → Healer, `ALL` → all three groups.
 
 ### Other Settings
 
