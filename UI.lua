@@ -279,7 +279,16 @@ local function CreateMainFrame()
     f:EnableMouse(true)
     f:SetToplevel(true)
 
-    tinsert(UISpecialFrames, "GuildBoardFrame")
+    f:EnableKeyboard(true)
+    f:SetPropagateKeyboardInput(true)
+    f:SetScript("OnKeyDown", function(self, key)
+        if key == "ESCAPE" then
+            self:SetPropagateKeyboardInput(false)
+            self:Hide()
+        else
+            self:SetPropagateKeyboardInput(true)
+        end
+    end)
 
     ---------------------------------------------------------------------------
     -- Header
