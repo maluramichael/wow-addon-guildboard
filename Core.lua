@@ -65,7 +65,7 @@ local defaults = {
         minLevel = 1,
         raidLevel = MAX_LEVEL,
         altPatterns = { "^alt" },
-        ilvlPatterns = { "(%d+)%s*ilvl", "ilvl%s*(%d+)", "(%d+)%s*-%s*ilvl", "(%d+)" },
+        ilvlPatterns = { "(%d+)%s*ilvl", "ilvl%s*(%d+)", "(%d+)%s*-%s*ilvl" },
         tankPatterns = { "tank" },
         healerPatterns = { "heal" },
         dpsPatterns = { "dps" },
@@ -493,6 +493,8 @@ end
 -- Debug Export
 -------------------------------------------------------------------------------
 function GuildBoard:ExportRosterText()
+    SetGuildRosterShowOffline(true)
+    self:ScanRoster()
     local lines = { "Name\tLevel\tClass\tNote\tOfficer Note\tiLvl\tRole" }
     for _, m in ipairs(self.members) do
         tinsert(lines, format("%s\t%d\t%s\t%s\t%s\t%s\t%s",
@@ -506,6 +508,70 @@ function GuildBoard:ExportRosterText()
         ))
     end
     return table.concat(lines, "\n")
+end
+
+function GuildBoard:ShowExportFrame(text)
+    if self.exportFrame then
+        local eb = self.exportFrame.editBox
+        eb:SetText(text)
+        eb:HighlightText()
+        eb:SetCursorPosition(0)
+        self.exportFrame:Show()
+        eb:SetFocus()
+        return
+    end
+
+    local f = CreateFrame("Frame", "GuildBoardExportFrame", UIParent, "BackdropTemplate")
+    f:SetSize(700, 450)
+    f:SetPoint("CENTER")
+    f:SetMovable(true)
+    f:EnableMouse(true)
+    f:SetFrameStrata("DIALOG")
+    f:SetBackdrop({
+        bgFile = "Interface\\Buttons\\WHITE8x8",
+        edgeFile = "Interface\\Buttons\\WHITE8x8",
+        edgeSize = 1,
+    })
+    f:SetBackdropColor(0.10, 0.10, 0.12, 0.95)
+    f:SetBackdropBorderColor(0.30, 0.30, 0.30, 1)
+    f:RegisterForDrag("LeftButton")
+    f:SetScript("OnDragStart", function(self) self:StartMoving() end)
+    f:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)
+
+    local title = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    title:SetPoint("TOPLEFT", 10, -10)
+    title:SetText("Guild Roster Export  (Ctrl+A, Ctrl+C to copy)")
+
+    local closeBtn = CreateFrame("Button", nil, f, "UIPanelCloseButton")
+    closeBtn:SetPoint("TOPRIGHT", -2, -2)
+    closeBtn:SetScript("OnClick", function() f:Hide() end)
+
+    local sf = CreateFrame("ScrollFrame", "GuildBoardExportScroll", f, "UIPanelScrollFrameTemplate")
+    sf:SetPoint("TOPLEFT", 10, -30)
+    sf:SetPoint("BOTTOMRIGHT", -30, 10)
+
+    local eb = CreateFrame("EditBox", "GuildBoardExportEditBox", sf)
+    eb:SetMultiLine(true)
+    eb:SetFontObject(GameFontHighlightSmall)
+    eb:SetAutoFocus(false)
+    eb:SetMaxLetters(0)
+    eb:SetWidth(sf:GetWidth() or 650)
+    eb:SetScript("OnEscapePressed", function() f:Hide() end)
+    eb:SetScript("OnTextChanged", function(self)
+        local _, h = self:GetFont()
+        local numLines = self:GetNumLetters() > 0 and select(2, self:GetText():gsub("\n", "\n")) + 1 or 1
+        self:SetHeight(max(numLines * (h + 2), sf:GetHeight()))
+    end)
+    sf:SetScrollChild(eb)
+
+    f.editBox = eb
+    self.exportFrame = f
+
+    eb:SetText(text)
+    eb:HighlightText()
+    eb:SetCursorPosition(0)
+    eb:SetFocus()
+    f:Show()
 end
 
 -------------------------------------------------------------------------------
