@@ -44,12 +44,13 @@ local CLASS_ORDER = {
     "DRUID", "DEMONHUNTER", "EVOKER",
 }
 
-local ROLE_ORDER = { "Tank", "Healer", "DPS" }
+local ROLE_ORDER = { "Tank", "Healer", "DPS", "Unknown" }
 
 local ROLE_COLORS = {
-    Tank   = { 0.20, 0.40, 0.80 },
-    Healer = { 0.20, 0.80, 0.35 },
-    DPS    = { 0.80, 0.25, 0.25 },
+    Tank    = { 0.20, 0.40, 0.80 },
+    Healer  = { 0.20, 0.80, 0.35 },
+    DPS     = { 0.80, 0.25, 0.25 },
+    Unknown = { 0.50, 0.50, 0.50 },
 }
 
 -------------------------------------------------------------------------------
@@ -124,6 +125,7 @@ function GuildBoard:ScanRoster()
                 ilvl = nil,
             }
             member.ilvl = self:ParseIlvl(member.note) or self:ParseIlvl(member.officerNote)
+            member.noteRole = self:ParseNoteRole(member)
             tinsert(members, member)
             if isOnline then
                 onlineCount = onlineCount + 1
@@ -274,11 +276,18 @@ function GuildBoard:GroupByClass(members)
 end
 
 function GuildBoard:GroupByRole(members)
-    local buckets = { Tank = {}, Healer = {}, DPS = {} }
+    local buckets = { Tank = {}, Healer = {}, DPS = {}, Unknown = {} }
     for _, m in ipairs(members) do
-        local role = m.role
-        if not buckets[role] then buckets[role] = {} end
-        tinsert(buckets[role], m)
+        local role = m.noteRole
+        if role == "ALL" then
+            tinsert(buckets.Tank, m)
+            tinsert(buckets.Healer, m)
+            tinsert(buckets.DPS, m)
+        elseif role and buckets[role] then
+            tinsert(buckets[role], m)
+        else
+            tinsert(buckets.Unknown, m)
+        end
     end
 
     local groups = {}
@@ -287,7 +296,7 @@ function GuildBoard:GroupByRole(members)
             sort(buckets[role], SortMembers)
             tinsert(groups, {
                 key = role,
-                name = role .. "s",
+                name = role == "Unknown" and "Unknown" or (role .. "s"),
                 color = ROLE_COLORS[role],
                 members = buckets[role],
             })
@@ -432,6 +441,24 @@ function GuildBoard:ParseIlvl(note)
             end
         end
     end
+    return nil
+end
+
+-------------------------------------------------------------------------------
+-- Note Role Extraction
+-------------------------------------------------------------------------------
+function GuildBoard:ParseNoteRole(member)
+    local note = strlower(member.note or "")
+    local officerNote = strlower(member.officerNote or "")
+    local text = note .. " " .. officerNote
+
+    -- "ALL" = appears in every role group (strict word boundary)
+    if text:find("%f[%a]all%f[%A]") then return "ALL" end
+    -- Match role keywords (heal also matches heals/healer)
+    if text:find("%f[%a]tank") then return "Tank" end
+    if text:find("%f[%a]heal") then return "Healer" end
+    if text:find("%f[%a]dps") then return "DPS" end
+
     return nil
 end
 
