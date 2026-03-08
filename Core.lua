@@ -66,6 +66,10 @@ local defaults = {
         raidLevel = MAX_LEVEL,
         altPatterns = { "^alt" },
         ilvlPatterns = { "(%d+)%s*ilvl", "ilvl%s*(%d+)", "(%d+)%s*-%s*ilvl" },
+        tankPatterns = { "tank" },
+        healerPatterns = { "heal" },
+        dpsPatterns = { "dps" },
+        allPatterns = { "all" },
         minIlvl = 0,
         windowWidth = 580,
         windowHeight = 520,
@@ -447,17 +451,27 @@ end
 -------------------------------------------------------------------------------
 -- Note Role Extraction
 -------------------------------------------------------------------------------
+local function MatchesAnyPattern(text, patterns)
+    for _, pattern in ipairs(patterns) do
+        local p = strlower(pattern)
+        if p ~= "" then
+            local ok, match = pcall(string.find, text, p)
+            if ok and match then return true end
+        end
+    end
+    return false
+end
+
 function GuildBoard:ParseNoteRole(member)
     local note = strlower(member.note or "")
     local officerNote = strlower(member.officerNote or "")
     local text = note .. " " .. officerNote
 
-    -- "ALL" = appears in every role group (strict word boundary)
-    if text:find("%f[%a]all%f[%A]") then return "ALL" end
-    -- Match role keywords (heal also matches heals/healer)
-    if text:find("%f[%a]tank") then return "Tank" end
-    if text:find("%f[%a]heal") then return "Healer" end
-    if text:find("%f[%a]dps") then return "DPS" end
+    local prof = self.db.profile
+    if MatchesAnyPattern(text, prof.allPatterns or {}) then return "ALL" end
+    if MatchesAnyPattern(text, prof.tankPatterns or {}) then return "Tank" end
+    if MatchesAnyPattern(text, prof.healerPatterns or {}) then return "Healer" end
+    if MatchesAnyPattern(text, prof.dpsPatterns or {}) then return "DPS" end
 
     return nil
 end

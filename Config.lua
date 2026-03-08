@@ -119,11 +119,104 @@ function GuildBoard:GetOptionsTable()
                     },
                 },
             },
+            roleDetection = {
+                name = "Role Detection",
+                type = "group",
+                inline = true,
+                order = 3,
+                args = {
+                    desc = {
+                        name = "Lua patterns to detect roles from guild notes. Checked case-insensitively against both public and officer notes. One pattern per line.",
+                        type = "description",
+                        order = 1,
+                    },
+                    tankPatterns = {
+                        name = "Tank Patterns",
+                        desc = "Patterns that identify a member as Tank",
+                        type = "input",
+                        order = 2,
+                        width = "full",
+                        multiline = 3,
+                        get = function()
+                            return table.concat(gb.db.profile.tankPatterns, "\n")
+                        end,
+                        set = function(_, val)
+                            local patterns = {}
+                            for line in val:gmatch("[^\r\n]+") do
+                                line = strtrim(line)
+                                if line ~= "" then tinsert(patterns, line) end
+                            end
+                            gb.db.profile.tankPatterns = patterns
+                            gb:RequestRoster()
+                        end,
+                    },
+                    healerPatterns = {
+                        name = "Healer Patterns",
+                        desc = "Patterns that identify a member as Healer",
+                        type = "input",
+                        order = 3,
+                        width = "full",
+                        multiline = 3,
+                        get = function()
+                            return table.concat(gb.db.profile.healerPatterns, "\n")
+                        end,
+                        set = function(_, val)
+                            local patterns = {}
+                            for line in val:gmatch("[^\r\n]+") do
+                                line = strtrim(line)
+                                if line ~= "" then tinsert(patterns, line) end
+                            end
+                            gb.db.profile.healerPatterns = patterns
+                            gb:RequestRoster()
+                        end,
+                    },
+                    dpsPatterns = {
+                        name = "DPS Patterns",
+                        desc = "Patterns that identify a member as DPS",
+                        type = "input",
+                        order = 4,
+                        width = "full",
+                        multiline = 3,
+                        get = function()
+                            return table.concat(gb.db.profile.dpsPatterns, "\n")
+                        end,
+                        set = function(_, val)
+                            local patterns = {}
+                            for line in val:gmatch("[^\r\n]+") do
+                                line = strtrim(line)
+                                if line ~= "" then tinsert(patterns, line) end
+                            end
+                            gb.db.profile.dpsPatterns = patterns
+                            gb:RequestRoster()
+                        end,
+                    },
+                    allPatterns = {
+                        name = "All Roles Patterns",
+                        desc = "Patterns that place a member into Tank, Healer, and DPS groups simultaneously",
+                        type = "input",
+                        order = 5,
+                        width = "full",
+                        multiline = 3,
+                        get = function()
+                            return table.concat(gb.db.profile.allPatterns, "\n")
+                        end,
+                        set = function(_, val)
+                            local patterns = {}
+                            for line in val:gmatch("[^\r\n]+") do
+                                line = strtrim(line)
+                                if line ~= "" then tinsert(patterns, line) end
+                            end
+                            gb.db.profile.allPatterns = patterns
+                            gb:RequestRoster()
+                        end,
+                    },
+                },
+            },
             ilvlExtraction = {
                 name = "Item Level Extraction",
                 type = "group",
                 inline = true,
-                order = 3,
+                order = 4,
                 args = {
                     desc = {
                         name = "Lua patterns to extract item level from guild notes. Must contain a (%d+) capture group.\nChecked case-insensitively. First match wins.\n\nExamples:\n  (%d+)%s*ilvl  =  \"230 ilvl\"\n  (%d+)%s*-%s*ilvl  =  \"251 - ilvl\"\n  ilvl%s*(%d+)  =  \"ilvl 230\"",
@@ -157,7 +250,7 @@ function GuildBoard:GetOptionsTable()
                 name = "Minimap",
                 type = "group",
                 inline = true,
-                order = 4,
+                order = 5,
                 args = {
                     minimapBtn = {
                         name = "Show Minimap Button",
@@ -181,7 +274,7 @@ function GuildBoard:GetOptionsTable()
                 name = "Slash Commands",
                 type = "group",
                 inline = true,
-                order = 5,
+                order = 6,
                 args = {
                     help = {
                         name = "/gb - Toggle guild board window\n/gb config - Open this options panel\n/gb refresh - Refresh guild roster",

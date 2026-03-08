@@ -73,15 +73,14 @@ Lua patterns with a `(%d+)` capture group to extract item level from notes. Firs
 
 ### Role Detection (By Role grouping)
 
-Role is detected from guild notes (public + officer) using keyword matching:
+Role is detected from guild notes (public + officer) using configurable Lua patterns. Each role has its own pattern list in the config panel. First match wins (All > Tank > Healer > DPS). Unmatched members go to Unknown.
 
-| Keyword | Role |
-|---------|------|
-| `tank` | Tank |
-| `heal` (also `heals`, `healer`) | Healer |
-| `dps` | DPS |
-| `all` | Duplicated into Tank, Healer, and DPS |
-| *(no match)* | Unknown |
+| Role | Default Pattern | Matches |
+|------|----------------|---------|
+| Tank | `tank` | Notes containing "tank" |
+| Healer | `heal` | Notes containing "heal", "heals", "healer" |
+| DPS | `dps` | Notes containing "dps" |
+| All Roles | `all` | Duplicated into Tank, Healer, and DPS |
 
 Examples: `DPS - 251 - ilvl PVE` → DPS, `PVP - 1425 - HEALS` → Healer, `ALL` → all three groups.
 
