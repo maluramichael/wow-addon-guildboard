@@ -64,6 +64,8 @@ local defaults = {
         minLevel = 1,
         raidLevel = MAX_LEVEL,
         altPatterns = { "^alt" },
+        windowWidth = 580,
+        windowHeight = 520,
         collapsed = {},
     },
 }

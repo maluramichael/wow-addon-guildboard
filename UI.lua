@@ -257,12 +257,16 @@ local function CreateMainFrame()
     if mainFrame then return mainFrame end
 
     local f = CreateFrame("Frame", "GuildBoardFrame", UIParent, "BackdropTemplate")
-    f:SetSize(WINDOW_WIDTH, WINDOW_HEIGHT)
+    local savedW = GuildBoard.db.profile.windowWidth or WINDOW_WIDTH
+    local savedH = GuildBoard.db.profile.windowHeight or WINDOW_HEIGHT
+    f:SetSize(savedW, savedH)
     f:SetPoint("CENTER")
     f:SetBackdrop(BACKDROP_MAIN)
     f:SetBackdropColor(unpack(C.bg))
     f:SetBackdropBorderColor(unpack(C.border))
     f:SetMovable(true)
+    f:SetResizable(true)
+    f:SetResizeBounds(420, 300, 900, 800)
     f:SetClampedToScreen(true)
     f:SetFrameStrata("MEDIUM")
     f:EnableMouse(true)
@@ -535,6 +539,27 @@ local function CreateMainFrame()
 
     f.raidReadyText = statusBar:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     f.raidReadyText:SetPoint("RIGHT", -6, 0)
+
+    ---------------------------------------------------------------------------
+    -- Resize Grip
+    ---------------------------------------------------------------------------
+    local grip = CreateFrame("Button", nil, f)
+    grip:SetSize(16, 16)
+    grip:SetPoint("BOTTOMRIGHT", -4, 4)
+    grip:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
+    grip:SetHighlightTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
+    grip:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
+    grip:SetScript("OnMouseDown", function()
+        f:StartSizing("BOTTOMRIGHT")
+    end)
+    grip:SetScript("OnMouseUp", function()
+        f:StopMovingOrSizing()
+        local w, h = f:GetSize()
+        GuildBoard.db.profile.windowWidth = w
+        GuildBoard.db.profile.windowHeight = h
+        scrollChild:SetWidth(scrollFrame:GetWidth())
+        GuildBoard:RefreshList()
+    end)
 
     ---------------------------------------------------------------------------
     -- OnShow
