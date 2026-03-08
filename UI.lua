@@ -424,7 +424,7 @@ local function CreateMainFrame()
     lvlInput:SetScript("OnTextChanged", function(self)
         local val = tonumber(self:GetText())
         if val and val >= 1 then
-            GuildBoard.db.profile.minLevel = min(100, val)
+            GuildBoard.db.profile.minLevel = min(90, val)
             GuildBoard:RefreshList()
         elseif self:GetText() == "" then
             GuildBoard.db.profile.minLevel = 1
