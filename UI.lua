@@ -421,11 +421,13 @@ local function CreateMainFrame()
     lvlInput:SetMaxLetters(3)
     lvlInput:SetTextInsets(4, 4, 0, 0)
     lvlInput:SetText("1")
-    lvlInput:SetScript("OnTextChanged", function(self, userInput)
-        if not userInput then return end
+    lvlInput:SetScript("OnTextChanged", function(self)
         local val = tonumber(self:GetText())
-        if val then
-            GuildBoard.db.profile.minLevel = max(1, min(80, val))
+        if val and val >= 1 then
+            GuildBoard.db.profile.minLevel = min(80, val)
+            GuildBoard:RefreshList()
+        elseif self:GetText() == "" then
+            GuildBoard.db.profile.minLevel = 1
             GuildBoard:RefreshList()
         end
     end)
