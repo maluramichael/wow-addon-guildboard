@@ -61,7 +61,7 @@ function GuildBoard:GetOptionsTable()
                         type = "range",
                         order = 4,
                         min = 1,
-                        max = 80,
+                        max = 100,
                         step = 1,
                         get = function() return gb.db.profile.minLevel end,
                         set = function(_, val)
@@ -75,7 +75,7 @@ function GuildBoard:GetOptionsTable()
                         type = "range",
                         order = 5,
                         min = 1,
-                        max = 80,
+                        max = 100,
                         step = 1,
                         get = function() return gb.db.profile.raidLevel end,
                         set = function(_, val)
