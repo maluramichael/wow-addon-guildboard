@@ -1,56 +1,86 @@
 # GuildBoard
 
-Visual guild roster dashboard with grouping, search, and deep filtering.
-
-## Summary
-
-At-a-glance guild overview with class/role/rank grouping, item level extraction from notes, alt detection, and powerful filters — all in a clean, resizable dark UI.
-
-## Description
-
-GuildBoard turns your guild roster into a rich, searchable dashboard. Members are displayed in a compact table with class icons, color-coded names, level, item level (parsed from guild notes), rank, zone, and notes. Group them by class, role, rank, level range, or online status with a single click.
-
-Filters let you instantly narrow down the roster: toggle offline visibility, hide alts, set a minimum level, or set a minimum item level. Alt detection and iLvl extraction patterns are fully configurable via Lua patterns, so they adapt to any guild's note conventions.
-
-The raid-ready counter in the status bar shows how many members meet the level threshold (excluding alts when hidden). Right-click any member for quick whisper or invite. The window is resizable and remembers its size between sessions.
+At-a-glance guild roster dashboard with grouping, item level parsing, alt detection, and powerful filters.
 
 ## Features
 
-- **5 Group Modes** — By Class, Role, Rank, Level, or Online Status via dropdown
-- **Item Level Column** — Extracts iLvl from guild notes with configurable patterns
-- **Alt Detection** — Identifies alts via note patterns (e.g. notes starting with "ALT")
-- **Powerful Filters** — Show Offline checkbox, Hide Alts checkbox, Min Level input, Min iLvl input
-- **Search** — Filter by name, class, zone, rank, or note content
-- **Collapsible Groups** — Click headers to collapse/expand, with online counts per group
-- **Raid Ready Counter** — Status bar shows max-level count (respects alt filter)
-- **Class Colors** — Color bar, icon, and name tinted per class throughout
-- **Member Tooltips** — Full details on hover: level, class, rank, zone, notes, alt info
-- **Context Menu** — Right-click to whisper or invite online members
-- **Click to Whisper** — Left-click any online member to open whisper
-- **Resizable Window** — Drag the bottom-right grip, size persists across sessions
-- **LDB Minimap Button** — Quick access with guild stats tooltip
-- **Dark Polished UI** — Clean dark theme with gold accents matching the MM addon suite
-- **Dual Client** — Works on both Anniversary and Retail (Midnight)
+- **5 Group Modes** — group by Class, Role, Rank, Level Range, or Online Status via dropdown menu
+- **Item Level Column** — extracts iLvl from guild notes using configurable patterns
+- **Alt Detection** — identifies alts by note patterns (e.g. notes starting with "ALT")
+- **Powerful Filters** — Show Offline, Hide Alts, Min Level, Min iLvl — all in the toolbar
+- **Search** — instantly filter by name, class, zone, rank, or note content
+- **Collapsible Groups** — click headers to collapse/expand, each showing online count
+- **Raid Ready Counter** — status bar tracks max-level characters (respects alt filter)
+- **Class Colors** — color bar, icon, and class-tinted name on every row
+- **Member Tooltips** — hover for full details: level, class, rank, zone, notes, alt info, raid readiness
+- **Context Menu** — right-click to whisper or invite online members
+- **Click to Whisper** — left-click any online member to start a whisper
+- **Resizable Window** — drag the bottom-right grip; size persists across sessions
+- **LDB Minimap Button** — quick access with guild stats in the tooltip
+- **Dark Polished UI** — clean dark theme with gold accents matching the MM addon suite
+
+## Usage
+
+### Slash Commands
+
+| Command | Action |
+|---------|--------|
+| `/gb` | Toggle the main window |
+| `/gb config` | Open the options panel |
+| `/gb refresh` | Force a guild roster refresh |
+
+### Main Window
+
+- **Search bar** — type to filter the roster in real-time
+- **Group Mode** — click the dropdown to switch between Class, Role, Rank, Level, or Status grouping
+- **Show Offline** — checkbox to include offline members
+- **Hide Alts** — checkbox to filter out characters detected as alts
+- **Min Level / Min iLvl** — type a number to set a floor filter
+- **Group headers** — click to collapse or expand; shows member count and online count
+- **Left-click** a member to whisper them
+- **Right-click** a member for whisper/invite options
+
+### LDB / Minimap Button
+
+- **Left-click** — toggle the main window
+- **Right-click** — open options
+- **Tooltip** — shows total members, online count, and raid-ready count
 
 ## Configuration
 
-All patterns and defaults are configurable in `/gb config`:
+Open `/gb config` to customize:
 
-- **Alt Patterns** — Lua patterns checked against notes (default: `^alt`)
-- **iLvl Patterns** — Lua patterns with `(%d+)` capture to extract item level
-- **Raid Ready Level** — Threshold for the raid-ready counter
-- **Default filters** — Show Offline, Hide Alts, Min Level
+### Alt Detection
 
-### Default iLvl Patterns
+Lua patterns checked case-insensitively against public and officer notes. One pattern per line.
 
 | Pattern | Matches |
 |---------|---------|
-| `(%d+)%s*ilvl` | "230 ilvl" |
-| `ilvl%s*(%d+)` | "ilvl 230" |
-| `(%d+)%s*-%s*ilvl` | "251 - ilvl" |
+| `^alt` | Notes starting with "ALT" (e.g. `ALT Ikoris - 340 ilvl`) |
+| `^twink` | Notes starting with "TWINK" |
+| `alt of` | Notes containing "alt of" |
 
-## Slash Commands
+### Item Level Extraction
 
-- `/gb` — Toggle window
-- `/gb config` — Open options
-- `/gb refresh` — Refresh guild roster
+Lua patterns with a `(%d+)` capture group to extract item level from notes. First match wins.
+
+| Pattern | Matches |
+|---------|---------|
+| `(%d+)%s*ilvl` | `230 ilvl` |
+| `ilvl%s*(%d+)` | `ilvl 230` |
+| `(%d+)%s*-%s*ilvl` | `251 - ilvl` |
+
+### Other Settings
+
+- **Raid Ready Level** — level threshold for the raid-ready counter
+- **Default Group Mode** — which grouping to use when opening the window
+- **Show/Hide Minimap Button**
+
+## Requirements
+
+- World of Warcraft Anniversary Edition or Retail (Midnight)
+- Ace3 libraries (included via CurseForge packaging)
+
+## Installation
+
+Install via [CurseForge](https://www.curseforge.com/wow/addons) or copy the `GuildBoard` folder into your `Interface\AddOns\` directory.
