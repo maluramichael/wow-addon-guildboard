@@ -283,6 +283,43 @@ function GuildBoard:GetOptionsTable()
                     },
                 },
             },
+            debug = {
+                name = "Debug",
+                type = "group",
+                inline = true,
+                order = 7,
+                args = {
+                    exportBtn = {
+                        name = "Export Roster Data",
+                        desc = "Show a copyable table of all guild members with name, level, class, notes, ilvl, and role",
+                        type = "execute",
+                        order = 1,
+                        func = function()
+                            local text = gb:ExportRosterText()
+                            StaticPopupDialogs["GUILDBOARD_EXPORT"] = {
+                                text = "Guild Roster Export (Ctrl+A, Ctrl+C to copy)",
+                                button1 = "Close",
+                                hasEditBox = true,
+                                editBoxWidth = 450,
+                                OnShow = function(self)
+                                    self.editBox:SetMultiLine(true)
+                                    self.editBox:SetMaxLetters(0)
+                                    self.editBox:SetText(text)
+                                    self.editBox:SetHeight(200)
+                                    self.editBox:HighlightText()
+                                    self.editBox:SetFocus()
+                                    self:SetWidth(500)
+                                end,
+                                timeout = 0,
+                                whileDead = true,
+                                hideOnEscape = true,
+                                preferredIndex = 3,
+                            }
+                            StaticPopup_Show("GUILDBOARD_EXPORT")
+                        end,
+                    },
+                },
+            },
         },
     }
 end

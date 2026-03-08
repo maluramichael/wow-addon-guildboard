@@ -65,7 +65,7 @@ local defaults = {
         minLevel = 1,
         raidLevel = MAX_LEVEL,
         altPatterns = { "^alt" },
-        ilvlPatterns = { "(%d+)%s*ilvl", "ilvl%s*(%d+)", "(%d+)%s*-%s*ilvl" },
+        ilvlPatterns = { "(%d+)%s*ilvl", "ilvl%s*(%d+)", "(%d+)%s*-%s*ilvl", "(%d+)" },
         tankPatterns = { "tank" },
         healerPatterns = { "heal" },
         dpsPatterns = { "dps" },
@@ -487,6 +487,25 @@ function GuildBoard:GetAltMainName(member)
     -- "Charname's alt"
     main = text:match("(%w+)'s alt")
     return main
+end
+
+-------------------------------------------------------------------------------
+-- Debug Export
+-------------------------------------------------------------------------------
+function GuildBoard:ExportRosterText()
+    local lines = { "Name\tLevel\tClass\tNote\tOfficer Note\tiLvl\tRole" }
+    for _, m in ipairs(self.members) do
+        tinsert(lines, format("%s\t%d\t%s\t%s\t%s\t%s\t%s",
+            m.name,
+            m.level,
+            m.classDisplayName or m.classFileName,
+            m.note or "",
+            m.officerNote or "",
+            m.ilvl and tostring(m.ilvl) or "",
+            m.noteRole or "Unknown"
+        ))
+    end
+    return table.concat(lines, "\n")
 end
 
 -------------------------------------------------------------------------------
