@@ -20,6 +20,7 @@ local GROUP_MODES = {
     { key = "rank",   label = "By Rank" },
     { key = "level",  label = "By Level" },
     { key = "online", label = "By Status" },
+    { key = "ilvl",   label = "By iLvl" },
 }
 
 local ROLE_MAP = {
@@ -250,6 +251,7 @@ function GuildBoard:GetGroupedMembers(members)
     elseif mode == "rank" then return self:GroupByRank(members)
     elseif mode == "level" then return self:GroupByLevel(members)
     elseif mode == "online" then return self:GroupByOnline(members)
+    elseif mode == "ilvl" then return self:GroupByIlvl(members)
     end
     return self:GroupByClass(members)
 end
@@ -403,6 +405,48 @@ function GuildBoard:GroupByOnline(members)
             name = "Offline",
             color = { 0.50, 0.50, 0.50 },
             members = offline,
+        })
+    end
+    return groups
+end
+
+function GuildBoard:GroupByIlvl(members)
+    local function SortByIlvl(a, b)
+        local ai = a.ilvl or 0
+        local bi = b.ilvl or 0
+        if ai ~= bi then return ai > bi end
+        if a.isOnline ~= b.isOnline then return a.isOnline end
+        return a.name < b.name
+    end
+
+    local withIlvl = {}
+    local noIlvl = {}
+    for _, m in ipairs(members) do
+        if m.ilvl and m.ilvl > 0 then
+            tinsert(withIlvl, m)
+        else
+            tinsert(noIlvl, m)
+        end
+    end
+
+    sort(withIlvl, SortByIlvl)
+    sort(noIlvl, SortMembers)
+
+    local groups = {}
+    if #withIlvl > 0 then
+        tinsert(groups, {
+            key = "ilvl_known",
+            name = "Item Level",
+            color = { 0.63, 0.21, 0.93 },
+            members = withIlvl,
+        })
+    end
+    if #noIlvl > 0 then
+        tinsert(groups, {
+            key = "ilvl_unknown",
+            name = "No Item Level",
+            color = { 0.50, 0.50, 0.50 },
+            members = noIlvl,
         })
     end
     return groups

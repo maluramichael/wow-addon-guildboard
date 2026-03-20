@@ -36,6 +36,7 @@ function GuildBoard:GetOptionsTable()
                             rank   = "By Rank",
                             level  = "By Level",
                             online = "By Status",
+                            ilvl   = "By iLvl",
                         },
                         get = function() return gb.db.profile.groupMode end,
                         set = function(_, val)
