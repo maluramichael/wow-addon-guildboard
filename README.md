@@ -1,5 +1,10 @@
 # GuildBoard
 
+<!-- links:start -->
+[![Support me on Ko-fi](https://malura.de/assets/badge/kofi.svg)](https://malura.de/go/kofi?ref=wow-addon-guildboard)
+[![Check out my page](https://malura.de/assets/badge/malura.svg)](https://malura.de/go/site?ref=wow-addon-guildboard)
+<!-- links:end -->
+
 At-a-glance guild roster dashboard with grouping, item level parsing, alt detection, and powerful filters.
 
 ## Features
